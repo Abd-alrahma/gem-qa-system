@@ -1,0 +1,25 @@
+# Generated files — do not commit (too large)
+chunks.json
+faiss_index.index
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+env/
+.venv/
+
+# Models cache (downloaded automatically)
+.cache/
+models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

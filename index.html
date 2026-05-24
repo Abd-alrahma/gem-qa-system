@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>المتحف المصري الكبير — نظام الأسئلة والأجوبة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sand:    #f2ead8;
+    --papyrus: #e8dcc4;
+    --gold:    #c49a3c;
+    --dark:    #1a1510;
+    --ink:     #2c2418;
+    --muted:   #7a6e5c;
+    --line:    rgba(196,154,60,0.25);
+    --radius:  4px;
+  }
+  body {
+    background: var(--sand);
+    color: var(--ink);
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    padding: 50px 24px 36px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+  }
+  h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 600; color: var(--dark); }
+  h1 em { font-style: normal; color: var(--gold); }
+  .subtitle { margin-top: 10px; font-size: 0.95rem; color: var(--muted); font-weight: 300; }
+
+  main { max-width: 720px; margin: 0 auto; padding: 44px 24px 80px; }
+
+  .mode-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.1em; }
+  .mode-toggle {
+    display: flex; gap: 0; border: 1px solid var(--line);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 8px;
+  }
+  .mode-btn {
+    flex: 1; padding: 11px 16px; background: transparent; border: none;
+    cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 13px;
+    color: var(--muted); transition: background 0.2s, color 0.2s;
+  }
+  .mode-btn + .mode-btn { border-right: 1px solid var(--line); }
+  .mode-btn.active { background: var(--gold); color: var(--dark); font-weight: 600; }
+  .mode-btn:not(.active):hover { background: rgba(196,154,60,0.1); color: var(--ink); }
+
+  .mode-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; font-style: italic; min-height: 1.4em; }
+
+  textarea {
+    width: 100%; min-height: 80px; background: var(--papyrus);
+    border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; font-family: 'Cairo', sans-serif; font-size: 1rem;
+    color: var(--ink); resize: vertical; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s; line-height: 1.6;
+    direction: rtl;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(196,154,60,0.12); }
+
+  .ask-btn {
+    margin-top: 12px; width: 100%; padding: 14px;
+    background: var(--dark); color: var(--sand); border: none;
+    border-radius: var(--radius); font-family: 'Cairo', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background 0.2s, transform 0.1s; letter-spacing: 0.05em;
+  }
+  .ask-btn:hover { background: var(--ink); }
+  .ask-btn:active { transform: scale(0.99); }
+  .ask-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Answer panel */
+  #answer-panel { margin-top: 36px; display: none; }
+  #answer-panel.visible { display: block; animation: fadeUp 0.4s forwards; }
+
+  .answer-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .answer-tag {
+    font-size: 10px; letter-spacing: 0.1em; padding: 4px 12px;
+    border-radius: 20px; background: var(--gold); color: var(--dark); font-weight: 600;
+  }
+  .answer-tag.generative { background: var(--ink); color: var(--sand); }
+  .answer-tag.auto { background: #6b5a3e; color: var(--sand); }
+  .score-badge { font-size: 11px; color: var(--muted); }
+
+  .answer-box {
+    background: var(--papyrus); border-right: 3px solid var(--gold);
+    padding: 20px 22px; border-radius: 0 var(--radius) var(--radius) 0;
+    direction: rtl;
+  }
+  .answer-text { font-size: 1.2rem; font-weight: 400; line-height: 1.8; color: var(--dark); }
+
+  .note-badge {
+    margin-top: 10px; font-size: 10px; color: var(--muted);
+    padding: 3px 10px; border: 1px solid var(--line);
+    display: inline-block; border-radius: 20px;
+  }
+
+  /* Context */
+  #context-section { margin-top: 16px; display: none; }
+  #context-section.visible { display: block; }
+  .ctx-toggle {
+    font-size: 11px; color: var(--muted); background: none; border: none;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; transition: color 0.2s; font-family: 'Cairo', sans-serif;
+  }
+  .ctx-toggle:hover { color: var(--gold); }
+  .ctx-toggle .arrow { transition: transform 0.2s; }
+  .ctx-toggle.open .arrow { transform: rotate(90deg); }
+  .ctx-body {
+    display: none; margin-top: 8px; padding: 12px 14px;
+    background: rgba(196,154,60,0.06); border: 1px solid var(--line);
+    border-radius: var(--radius); font-size: 0.85rem; color: var(--muted);
+    line-height: 1.7; direction: rtl;
+  }
+  .ctx-body.open { display: block; }
+
+  /* Error */
+  .error-box {
+    margin-top: 16px; padding: 12px 16px; border: 1px solid #c0392b;
+    border-radius: var(--radius); color: #c0392b; font-size: 0.88rem; display: none;
+  }
+  .error-box.visible { display: block; }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(242,234,216,0.4); border-top-color: var(--sand);
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-left: 8px;
+  }
+
+  /* Samples */
+  .samples-label { font-size: 11px; color: var(--muted); margin: 28px 0 8px; }
+  .samples { display: flex; flex-direction: column; gap: 14px; }
+  .sample-group-title {
+    font-size: 11px; color: var(--gold); margin-bottom: 7px;
+    border-bottom: 1px solid var(--line); padding-bottom: 4px;
+  }
+  .sample-group-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 6px 14px; border: 1px solid var(--line); border-radius: 20px;
+    font-size: 0.82rem; color: var(--muted); background: transparent;
+    cursor: pointer; font-family: 'Cairo', sans-serif;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .chip:hover { border-color: var(--gold); color: var(--ink); background: rgba(196,154,60,0.07); }
+
+  footer {
+    text-align: center; padding: 20px; border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--muted); letter-spacing: 0.1em;
+  }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Grand Egyptian Museum · نظام الأسئلة والأجوبة</p>
+  <h1>اسأل <em>المتحف المصري الكبير</em></h1>
+  <p class="subtitle">استعلم عن محتوى الموقع الرسمي · اختر أسلوب الإجابة</p>
+</header>
+
+<main>
+  <p class="mode-label">وضع الإجابة</p>
+  <div class="mode-toggle">
+    <button class="mode-btn active" data-mode="extractive">استخراجي</button>
+    <button class="mode-btn"        data-mode="generative">توليدي</button>
+    <button class="mode-btn"        data-mode="auto">تلقائي</button>
+  </div>
+  <p class="mode-desc" id="mode-desc">
+    يستخرج الإجابة الدقيقة من النص المصدر — الأفضل للأسماء والتواريخ والأرقام.
+  </p>
+
+  <textarea id="question" rows="3" placeholder="مثال: أين يقع المتحف المصري الكبير؟"></textarea>
+  <button class="ask-btn" id="ask-btn" onclick="askQuestion()">اسأل</button>
+
+  <div class="error-box" id="error-box"></div>
+
+  <div id="answer-panel">
+    <div class="answer-header">
+      <span class="answer-tag" id="answer-tag">استخراجي</span>
+      <span class="score-badge" id="score-badge"></span>
+    </div>
+    <div class="answer-box">
+      <p class="answer-text" id="answer-text"></p>
+    </div>
+    <div id="note-wrap" style="margin-top:8px; display:none;">
+      <span class="note-badge" id="note-text"></span>
+    </div>
+    <div id="context-section">
+      <button class="ctx-toggle" id="ctx-toggle" onclick="toggleCtx()">
+        <span class="arrow">▶</span> عرض السياق المصدر
+      </button>
+      <div class="ctx-body" id="ctx-body"></div>
+    </div>
+  </div>
+
+  <p class="samples-label">جرب أن تسأل</p>
+  <div class="samples" id="samples"></div>
+</main>
+
+<footer>المتحف المصري الكبير · نظام QA · AraElectra + multilingual-e5</footer>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let currentMode = 'extractive';
+
+const fallbackSuggestions = [
+  { category: 'زيارة المتحف', question: 'أين يقع المتحف المصري الكبير؟' },
+  { category: 'زيارة المتحف', question: 'ما هي ساعات عمل المتحف؟' },
+  { category: 'زيارة المتحف', question: 'متى آخر موعد لشراء التذاكر؟' },
+  { category: 'زيارة المتحف', question: 'ما هي مواعيد متحف الأطفال؟' },
+  { category: 'التذاكر والخدمات', question: 'كيف أشتري تذكرة؟' },
+  { category: 'التذاكر والخدمات', question: 'هل يجب حجز التذاكر مسبقًا؟' },
+  { category: 'التذاكر والخدمات', question: 'هل يمكن استرداد قيمة التذاكر؟' },
+  { category: 'التذاكر والخدمات', question: 'هل المتحف مجهز لذوي الهمم؟' },
+  { category: 'الجولات', question: 'هل يقدم المتحف جولات إرشادية؟' },
+  { category: 'الجولات', question: 'ما مدة الجولة الإرشادية؟' },
+  { category: 'الجولات', question: 'كيف أحجز جولة خاصة؟' },
+  { category: 'المجموعات الأثرية', question: 'كم عدد القطع الأثرية في الدرج العظيم؟' },
+  { category: 'المجموعات الأثرية', question: 'كم قطعة تعرض في قاعات توت عنخ آمون؟' },
+  { category: 'المجموعات الأثرية', question: 'ما هي أهم القطع الأثرية في المتحف؟' },
+  { category: 'قطع مختارة', question: 'ما رقم أثر قناع الدفن الذهبي؟' },
+  { category: 'قطع مختارة', question: 'ما مادة صنع قناع الدفن الذهبي؟' },
+  { category: 'قطع مختارة', question: 'ما رقم أثر كرسي العرش الذهبي؟' },
+  { category: 'قطع مختارة', question: 'ما مادة صنع مسلة الملك رمسيس الثاني؟' },
+  { category: 'الأطفال والتعليم', question: 'أين يقع متحف الأطفال؟' },
+  { category: 'الأطفال والتعليم', question: 'كيف أحجز زيارة مدرسية؟' },
+  { category: 'الخدمات', question: 'هل يوجد دليل صوتي؟' },
+  { category: 'الخدمات', question: 'هل يُسمح بالتصوير داخل المتحف؟' },
+];
+
+const modeDescs = {
+  extractive: 'يستخرج الإجابة الدقيقة من النص المصدر — الأفضل للأسماء والتواريخ والأرقام.',
+  generative: 'يدمج أفضل الفقرات ذات الصلة لتقديم إجابة مفصّلة — الأفضل لأسئلة لماذا وكيف.',
+  auto:       'يجرّب الاستخراج أولاً، وإذا كانت الثقة منخفضة ينتقل تلقائياً إلى الوضع التوليدي.',
+};
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    document.getElementById('mode-desc').textContent = modeDescs[currentMode];
+    document.getElementById('answer-panel').classList.remove('visible');
+    document.getElementById('error-box').classList.remove('visible');
+  });
+});
+
+function setQ(text) {
+  document.getElementById('question').value = text;
+  document.getElementById('question').focus();
+}
+
+function renderSuggestions(items) {
+  const root = document.getElementById('samples');
+  const groups = {};
+  items.forEach(item => {
+    if (!groups[item.category]) groups[item.category] = [];
+    groups[item.category].push(item.question);
+  });
+
+  root.innerHTML = '';
+  Object.entries(groups).forEach(([category, questions]) => {
+    const group = document.createElement('section');
+    const title = document.createElement('p');
+    const chips = document.createElement('div');
+
+    title.className = 'sample-group-title';
+    title.textContent = category;
+    chips.className = 'sample-group-chips';
+
+    questions.forEach(question => {
+      const button = document.createElement('button');
+      button.className = 'chip';
+      button.type = 'button';
+      button.textContent = question;
+      button.addEventListener('click', () => setQ(question));
+      chips.appendChild(button);
+    });
+
+    group.appendChild(title);
+    group.appendChild(chips);
+    root.appendChild(group);
+  });
+}
+
+async function loadSuggestions() {
+  renderSuggestions(fallbackSuggestions);
+  try {
+    const resp = await fetch(`${API}/suggested-questions`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (Array.isArray(data.items) && data.items.length) {
+      renderSuggestions(data.items);
+    }
+  } catch (_) {
+    // Keep local fallback suggestions when the API is not running yet.
+  }
+}
+
+function toggleCtx() {
+  document.getElementById('ctx-toggle').classList.toggle('open');
+  document.getElementById('ctx-body').classList.toggle('open');
+}
+
+async function askQuestion() {
+  const question = document.getElementById('question').value.trim();
+  if (!question) return;
+
+  const btn      = document.getElementById('ask-btn');
+  const errBox   = document.getElementById('error-box');
+  const panel    = document.getElementById('answer-panel');
+  const ctxSec   = document.getElementById('context-section');
+  const noteWrap = document.getElementById('note-wrap');
+
+  panel.classList.remove('visible');
+  errBox.classList.remove('visible');
+  ctxSec.style.display = 'none';
+  noteWrap.style.display = 'none';
+  document.getElementById('ctx-toggle').classList.remove('open');
+  document.getElementById('ctx-body').classList.remove('open');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> جارٍ البحث…';
+
+  try {
+    const url  = `${API}/ask?question=${encodeURIComponent(question)}&mode=${currentMode}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+    const data = await resp.json();
+
+    document.getElementById('answer-text').textContent = data.answer || '—';
+
+    const tag = document.getElementById('answer-tag');
+    const actualMode = data.mode || currentMode;
+    const modeNames = { extractive: 'استخراجي', generative: 'توليدي', auto: 'تلقائي' };
+    tag.textContent = modeNames[actualMode] || actualMode;
+    tag.className = `answer-tag ${actualMode}`;
+
+    const badge = document.getElementById('score-badge');
+    if (data.confidence !== undefined && data.confidence > 0) {
+      badge.textContent = `الثقة: ${Math.round(data.confidence * 100)}%`;
+    } else if (data.retrieval_score !== undefined) {
+      badge.textContent = `الاسترجاع: ${Math.round(data.retrieval_score * 100)}%`;
+    } else {
+      badge.textContent = '';
+    }
+
+    if (data.note) {
+      document.getElementById('note-text').textContent = data.note;
+      noteWrap.style.display = 'block';
+    }
+
+    if (data.context) {
+      document.getElementById('ctx-body').textContent = data.context;
+      ctxSec.style.display = 'block';
+    }
+
+    panel.classList.add('visible');
+
+  } catch (err) {
+    errBox.textContent = `تعذّر الاتصال بالـ API. تأكد أن uvicorn يعمل على ${API}. (${err.message})`;
+    errBox.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'اسأل';
+  }
+}
+
+document.getElementById('question').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) askQuestion();
+});
+
+loadSuggestions();
+</script>
+</body>
+</html>

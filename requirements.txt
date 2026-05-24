@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+faiss-cpu
+sentence-transformers
+transformers
+torch
+selenium
+webdriver-manager
+beautifulsoup4
+requests
