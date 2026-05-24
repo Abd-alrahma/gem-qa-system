@@ -18,7 +18,7 @@
 
 ## 📌 Project Description
 
-This project is a **Graduation Project** that implements a complete NLP pipeline for Arabic Question Answering over real website content.
+This project is a **NLP Project** that implements a complete NLP pipeline for Arabic Question Answering over real website content.
 
 The system:
 1. **Scrapes** the official GEM Arabic website using Selenium (JavaScript-rendered)
