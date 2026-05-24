@@ -343,7 +343,9 @@ requests
 
 ## 👤 Author
 
-Built as a Graduation Project — Natural Language Processing (NLP)
+**Abdalrahman Mahmoud**
+Egypt-Japan University of Science and Technology (E-JUST)
+Natural Language Processing (NLP) — 2026
 
 ---
 
